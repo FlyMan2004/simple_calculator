@@ -6,12 +6,18 @@
 #include <vector>
 #include <string_view>
 #include <iostream>
+#include <vector>
 #include <string>
+
+#include "lib/tree.hxx"
 
 #define fn  auto
 #define let auto
 
 namespace simple_calc {
+
+using ImplThisType [[deprecated("Placeholder type. Please replace it with other type later.")]] = 
+struct {};
 
 struct Token {
     // clang-format off
@@ -22,6 +28,7 @@ struct Token {
         op,
         integer,
         fp,
+        identifier,
     };
     enum class Punct : std::uint8_t {
         unknown     = '\0',
@@ -78,10 +85,10 @@ struct Token {
     Kind kind;
 
     [[gnu::always_inline, gnu::const]]
-    static constexpr fn Create(Kind kind = Kind::undetermined, Value value = Value{}) noexcept -> Token
+    static fn Create(Kind kind = Kind::undetermined, Value value = Value{}) noexcept -> Token
     { return Token{ .value = value, .kind = kind }; }
 
-    static constexpr fn To_String(Token const& token) -> std::string
+    static fn To_String(Token const& token) -> std::string
     {
         using namespace std::literals;
         std::string kind_str, value_str = "\"To be implemented\""s;
@@ -109,6 +116,8 @@ struct Token {
             kind_str = "number"s;
             value_str = std::format("{}", token.value.integer);
             break;
+        default:
+            __builtin_unreachable();
         }
 
         return std::format(
@@ -118,7 +127,11 @@ struct Token {
     }
 };
 
-constexpr fn Get_Tokens(std::string_view const src_str) -> std::vector<Token>
+struct AST : 
+    Tree<Token>
+{ /* TODO */ };
+
+fn Get_Tokens(std::string_view const src_str) -> std::vector<Token>
 {
     std::vector<Token> tokens;
     Token current_token = Token::Create();
@@ -179,6 +192,13 @@ constexpr fn Get_Tokens(std::string_view const src_str) -> std::vector<Token>
     }
 
     return tokens;
+}
+
+fn Get_AST(std::vector<Token> tokens [[maybe_unused]]) -> AST
+{
+    // deal with the case: `integer - integer + integer * integer` for beginning
+
+    return AST{};
 }
 
 }
