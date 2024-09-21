@@ -1,0 +1,19 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/clang++",
+      "-std=c++23",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Ofast",
+      "-c",
+      "-o",
+      "bin/calculator_core.o",
+      "calculator_core.cxx"
+    ],
+    "directory": "/home/zijian/learn/compiler/simple_calculator",
+    "file": "/home/zijian/learn/compiler/simple_calculator/calculator_core.cxx",
+    "output": "/home/zijian/learn/compiler/simple_calculator/bin/calculator_core.o"
+  }
+]
