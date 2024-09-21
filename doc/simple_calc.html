@@ -1036,9 +1036,159 @@ It seems very easy to create one compared with your powerful phone. That's corre
 0
 </code></pre>
 <h3 id="data-range">Data range</h3>
-<p>For 20% of the dataset, <code>${op} == '+'</code>, <code>0 &lt;= ${a, b} &lt; 2^32</code>, <code>0 &lt; ${n} &lt; 100</code>;</p>
-<p>For 50% of the dataset, <code>0 &lt;= ${a} &lt;= ${b} &lt; 2^32</code>, <code>0 &lt; ${n} &lt; 100</code>;</p>
-<p>For 100% of the dataset, <code>0 &lt;= ${a, b, n} &lt; 2^32</code></p>
+<p>For 20% of the dataset, <code>${op} == '+'</code>, <code>0 &lt;= ${a, b} &lt; 2^32</code>, <code>0 &lt; ${n} &lt; 100</code>;<br>
+For 50% of the dataset, <code>0 &lt;= ${a} &lt;= ${b} &lt; 2^32</code>, <code>0 &lt; ${n} &lt; 100</code>;<br>
+For 100% of the dataset, <code>0 &lt;= ${a, b, n} &lt; 2^32</code>.</p>
+<h2 id="level-1-take-tok-put-tok">Level 1: Take tok, put tok</h2>
+<h3 id="background">Background</h3>
+<p>In real implementation of a usable calculator, tokenize the input is vital for multiple reasons.<br>
+Belew is Q&amp;A with ChatGPT about this.</p>
+<blockquote>
+<p>User:<br>
+I'm learning the basics and implementation of compiler. Can you please tell me the reason why it's important to separate the inputs into several tokens when perform the lexical analysis?</p>
+</blockquote>
+<blockquote>
+<p>ChatGPT 4o mini:<br>
+Separating inputs into tokens during lexical analysis is crucial for several reasons:</p>
+<ol>
+<li>
+<p><strong>Simplification</strong>: Tokens simplify the syntax analysis phase by breaking down the input into manageable pieces. This makes it easier to understand the structure of the source code.</p>
+</li>
+<li>
+<p><strong>Error Detection</strong>: By identifying tokens, the lexer can detect invalid characters or sequences early, which helps in providing meaningful error messages.</p>
+</li>
+<li>
+<p><strong>Efficiency</strong>: Processing the input as tokens reduces the complexity of the parsing process. The parser can work with a finite set of token types rather than the raw input characters.</p>
+</li>
+<li>
+<p><strong>Language Abstraction</strong>: Tokens represent meaningful constructs in the programming language (e.g., keywords, identifiers, literals), abstracting away the specific syntax details. This abstraction allows for easier implementation of language rules.</p>
+</li>
+<li>
+<p><strong>Support for Multiple Languages</strong>: A lexer can be designed to recognize different languages by defining different sets of tokens, making the compiler more versatile.</p>
+</li>
+<li>
+<p><strong>Facilitating Parsing</strong>: With tokens, the parser can use grammar rules more effectively, as it deals with discrete units rather than continuous character streams.</p>
+</li>
+</ol>
+<p>By organizing the input into tokens, the lexical analyzer lays the groundwork for effective parsing and further stages of compilation.</p>
+</blockquote>
+<h3 id="description-1">Description</h3>
+<p>Based on previous work, the grammar of the level-1 calculator input can be described as:</p>
+<ul>
+<li><code>${integer}</code>: a <strong>31-bit</strong> unsigned integer like <code>0</code>, <code>256</code>, <code>20240921</code></li>
+<li><code>${op}</code>: binary operator <code>+</code> or <code>-</code></li>
+<li><code>${expr}</code>: <code>${integer} ${op} ${integer}</code></li>
+<li><code>${statement}</code>: <code>${expr};</code> or <code>;</code></li>
+</ul>
+<p>Each <code>${statement}</code> or <code>${expr}</code> can be within multiple lines;<br>
+blank characters between <code>${integer}</code>, <code>${op}</code>, <code>';'</code> should be ignored;</p>
+<p>Example of valid input:</p>
+<pre><code>1 + 2;2+3;
+1    -
+  3
+    ;
+;
+</code></pre>
+<p>For a real calculator, user won't tell how many input will be given. So specially, we say that <strong>the null statement</strong>:</p>
+<pre><code>;
+</code></pre>
+<p>is considered as the end of input.</p>
+<p><strong>Now you are asked to tokenize the input of user</strong>. Then print out the info of the token under processing to <strong><code>stderr</code></strong> in this format:</p>
+<pre><code>&quot;${varible_name}&quot;: {
+    &quot;variable_type&quot;: &quot;${variable_type}&quot;
+    &quot;kind&quot;: &quot;${kind}&quot;, 
+    &quot;value&quot;: &quot;${value}&quot;
+}
+</code></pre>
+<p><code>${variable_name}</code> is the name of the token variable;<br>
+<code>${variable_type}</code> is the type name of the variable;<br>
+<code>${kind}</code> is the kind of the token;<br>
+<code>${value}</code> is the value store in the token.</p>
+<p>Printing the value of each <code>${expr}</code> is recommanded but not enforced. If you want, print one value for each <code>${statement}</code> per line to <strong><code>stdout</code></strong>.</p>
+<h3 id="input-sample-1">Input sample:</h3>
+<pre><code>1 + 2;2+3;
+1    -
+  3
+    ;;
+</code></pre>
+<h3 id="output-sample-of-stderr-required">Output sample of <code>stderr</code> (required):</h3>
+<pre><code>&quot;${varible_name}&quot;: {
+    &quot;variable_type&quot;: &quot;${variable_type}&quot;
+    &quot;kind&quot;: &quot;int&quot;, 
+    &quot;value&quot;: &quot;1&quot;
+},
+&quot;${varible_name}&quot;: {
+    &quot;variable_type&quot;: &quot;${variable_type}&quot;
+    &quot;kind&quot;: &quot;op&quot;, 
+    &quot;value&quot;: &quot;+&quot;
+},
+&quot;${varible_name}&quot;: {
+    &quot;variable_type&quot;: &quot;${variable_type}&quot;
+    &quot;kind&quot;: &quot;int&quot;, 
+    &quot;value&quot;: &quot;2&quot;
+},
+&quot;${varible_name}&quot;: {
+    &quot;variable_type&quot;: &quot;${variable_type}&quot;
+    &quot;kind&quot;: &quot;end_of_statement&quot;, 
+    &quot;value&quot;: &quot;;&quot;
+},
+&quot;${varible_name}&quot;: {
+    &quot;variable_type&quot;: &quot;${variable_type}&quot;
+    &quot;kind&quot;: &quot;int&quot;, 
+    &quot;value&quot;: &quot;2&quot;
+},
+&quot;${varible_name}&quot;: {
+    &quot;variable_type&quot;: &quot;${variable_type}&quot;
+    &quot;kind&quot;: &quot;op&quot;, 
+    &quot;value&quot;: &quot;+&quot;
+},
+&quot;${varible_name}&quot;: {
+    &quot;variable_type&quot;: &quot;${variable_type}&quot;
+    &quot;kind&quot;: &quot;int&quot;, 
+    &quot;value&quot;: &quot;3&quot;
+},
+&quot;${varible_name}&quot;: {
+    &quot;variable_type&quot;: &quot;${variable_type}&quot;
+    &quot;kind&quot;: &quot;end_of_statement&quot;, 
+    &quot;value&quot;: &quot;;&quot;
+},&quot;${varible_name}&quot;: {
+    &quot;variable_type&quot;: &quot;${variable_type}&quot;
+    &quot;kind&quot;: &quot;int&quot;, 
+    &quot;value&quot;: &quot;1&quot;
+},
+&quot;${varible_name}&quot;: {
+    &quot;variable_type&quot;: &quot;${variable_type}&quot;
+    &quot;kind&quot;: &quot;op&quot;, 
+    &quot;value&quot;: &quot;-&quot;
+},
+&quot;${varible_name}&quot;: {
+    &quot;variable_type&quot;: &quot;${variable_type}&quot;
+    &quot;kind&quot;: &quot;int&quot;, 
+    &quot;value&quot;: &quot;3&quot;
+},
+&quot;${varible_name}&quot;: {
+    &quot;variable_type&quot;: &quot;${variable_type}&quot;
+    &quot;kind&quot;: &quot;end_of_statement&quot;, 
+    &quot;value&quot;: &quot;;&quot;
+},
+&quot;${varible_name}&quot;: {
+    &quot;variable_type&quot;: &quot;${variable_type}&quot;
+    &quot;kind&quot;: &quot;end_of_statement&quot;, 
+    &quot;value&quot;: &quot;;&quot;
+}
+</code></pre>
+<p><strong>Remember to replace <code>${...}</code> with correct content.</strong></p>
+<h3 id="output-sample-of-stdout-optional">Output sample of <code>stdout</code> (optional):</h3>
+<pre><code>3
+5
+-2
+</code></pre>
+<h3 id="data-range-1">Data range</h3>
+<p>For 100% of the dataset, <code>0 &lt;= ${integer} &lt; 2^31</code>, <code>${op} == '+' || ${op} == '-'</code>, all of inputs are valid and <strong>only one</strong> null statement as the last statement.</p>
+<h3 id="note">Note</h3>
+<p>Please write your code based on framework.cxx.<br>
+If your compiler complain that it does not support std::format, try to upgrade to gcc 14 or later.<br>
+Compile with following arguments: <code>&quot;-std=c++23 -Wall -Wextra -Werror -O3&quot;</code></p>
 
             <script async src="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.js"></script>
             

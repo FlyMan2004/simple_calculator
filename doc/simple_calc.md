@@ -202,3 +202,9 @@ Printing the value of each `${expr}` is recommanded but not enforced. If you wan
 ### Data range
 
 For 100% of the dataset, `0 <= ${integer} < 2^31`, `${op} == '+' || ${op} == '-'`, all of inputs are valid and **only one** null statement as the last statement.
+
+### Note
+
+Please write your code based on framework.cxx.  
+If your compiler complain that it does not support std::format, try to upgrade to gcc 14 or later.  
+Compile with following arguments: `"-std=c++23 -Wall -Wextra -Werror -O3"`
