@@ -1,3 +1,4 @@
+/* If you are unsatisfied with the existing code, modify as you want. */
 #include <cstdint>
 #include <limits>
 #include <memory>
@@ -6,10 +7,17 @@
 #define fn  auto
 #define let auto
 
+/*!
+    See [Enumeration declaration - cppreference.com](https://en.cppreference.com/w/cpp/language/enum) for usagel
+    of enumerations.
+*/
 enum class Op : std::uint32_t {
     invalid = 0,
     binary_plus,
     binary_minus,
+};
+struct EOS {
+    let static constexpr value = ';';
 };
 
 struct Token {
@@ -19,7 +27,6 @@ struct Token {
         integer,
         op,
     };
-    struct EOS {};
     union Value {
         std::int32_t integer;
         Op op;
@@ -60,7 +67,7 @@ struct Token {
         }
     }
 
-    static fn Get() -> Token
+    static fn Get_From_Istream() -> Token
     {
         Token tok{ .kind = Kind::invalid, .value = {} };
         std::string tok_str = {};
