@@ -8,7 +8,7 @@
 #define let auto
 
 /*!
-    See [Enumeration declaration - cppreference.com](https://en.cppreference.com/w/cpp/language/enum) for usagel
+    See [Enumeration declaration - cppreference.com](https://en.cppreference.com/w/cpp/language/enum) for usage
     of enumerations.
 */
 enum class Op : std::uint32_t {
@@ -16,13 +16,16 @@ enum class Op : std::uint32_t {
     binary_plus,
     binary_minus,
 };
+/*!
+    `EOS` for short of `end_of_statement` 
+*/
 struct EOS {
     let static constexpr value = ';';
 };
 
 struct Token {
     enum class Kind : std::uint32_t {
-        end_of_statement = std::numeric_limits<std::uint32_t>::max(), /// `EOS` for short of `end_of_statement`
+        end_of_statement = std::numeric_limits<std::uint32_t>::max(),
         invalid = 0,
         integer,
         op,
@@ -32,6 +35,10 @@ struct Token {
         Op op;
         [[no_unique_address]]
         EOS end_of_statement;
+        Value() noexcept {}
+        /*!
+            Ensure the union type can always be destory if it's of invalid state.
+        */
         ~Value() {}
     };
 
