@@ -86,17 +86,17 @@ struct Token {
                 - null  ( ch == '\0' )
                 - digit ( isdigit(ch) == true )
                 - punct ( ispunct(ch) == true && (ch == ';' || ch == '+' || ch == '-') )
-                - blank ( isblank(ch) == true )
+                - space ( isspace(ch) == true )
                 - invalid ( otherwise )
 
             State transformation:
                 null  \
-                blank ----> digit: token is a integer
+                space ----> digit: token is a integer
                         |-> punct: token is an operator or EOS
-                        |-> blank: ignore
+                        |-> space: ignore
                         `-> invalid: invalid token
                 digit ----> digit: append digit to ${tok_str}
-                        |-> punct, blank, invalid: token is completed
+                        |-> punct, space, invalid: token is completed
                 punct ----> ${any}: token is completed
             
             Complete this part below.
