@@ -1,5 +1,5 @@
 CXX := clang++
-CXXFLAGS := -std=c++23 -Wall -Wextra -Werror -Ofast
+CXXFLAGS := -std=c++23 -Wall -Wextra -Werror -Ofast -g -fsanitize=address,undefined
 Binary_Dir := bin
 Test_Dir := test
 
