@@ -103,6 +103,7 @@ struct Token {
     {
         Token tok{ .kind = Kind::invalid, .value = {} };
         std::string tok_str = {};
+        let constexpr Advance = [] { std::cin.get(); };
 
         /*
             Read token character by character.  
@@ -120,14 +121,13 @@ struct Token {
                         |-> space: ignore
                         `-> invalid: invalid token
                 digit ----> digit: append digit to ${tok_str}
-                        |-> punct, space, invalid: token is completed
+                        `-> punct, space, invalid: token is completed
                 punct ----> ${any}: token is completed
             
             Complete this part below.
         */
 
-        let Advance = [] { std::cin.get(); };
-        for (char ch = '\0'; std::cin.good(); Advance()) {
+        for (char ch = '\0'; std::cin.good(); ) {
             ch = std::cin.peek();
             if (std::isdigit(ch)) {
                 switch (tok.kind) {
@@ -140,6 +140,7 @@ struct Token {
                 default:
                     goto token_end;
                 }
+                Advance();
                 continue;
             }
             if (std::ispunct(ch)) {
@@ -159,10 +160,17 @@ struct Token {
                 default:
                     goto token_end;
                 }
+                Advance();
                 continue;
             }
-            if (std::isspace(ch))
-                continue;
+            if (std::isspace(ch)) {
+                Advance();
+                if (tok.kind != Kind::invalid) {
+                    goto token_end;
+                } else {
+                    continue;
+                }
+            }
             /* if (ch is invalid) */
             goto token_end;
         }
