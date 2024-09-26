@@ -16,7 +16,7 @@ enum class Op : std::uint32_t {
     binary_plus,
     binary_minus,
 };
-constexpr fn String_To_Op(const std::string_view str) -> Op
+constexpr fn Str_To_Op(const std::string_view str) -> Op
 {
     Op op = Op::invalid;
     if (str == "+")
@@ -25,7 +25,7 @@ constexpr fn String_To_Op(const std::string_view str) -> Op
         op = Op::binary_minus;
     return op;
 }
-constexpr fn Op_To_String(const Op op) -> std::string_view
+constexpr fn Op_To_Str(const Op op) -> std::string_view
 {
     std::string_view str;
     switch (op) {
@@ -191,7 +191,7 @@ struct Token {
         case Kind::op:
             /* convert tok_str to Op and assign to tok.value */
             {
-                std::construct_at(std::addressof(tok.value.op), String_To_Op(tok_str));
+                std::construct_at(std::addressof(tok.value.op), Str_To_Op(tok_str));
             }
             break;
         case Kind::end_of_statement:
@@ -205,7 +205,8 @@ struct Token {
         return tok;
     }
 
-    static fn Kind_To_String(Kind kind) -> std::string_view
+    /* Add other member here if needed... */
+    static fn Kind_To_Str(Kind kind) -> std::string_view
     {
     #define case_to_str(var_str, enum_value)    \
         case enum_value:                        \
@@ -225,7 +226,6 @@ struct Token {
         return str;
     #undef case_to_str
     }
-    /* Add other member here if needed... */
 };
 
 /* Add anything you need here... */
@@ -244,10 +244,10 @@ int main()
             Token::fmt_template, 
             "token", 
             typeid(token).name(), 
-            Token::Kind_To_String(token.kind), 
+            Token::Kind_To_Str(token.kind), 
             (
                 token.kind == Token::Kind::integer ? std::format("{}", token.value.integer) :
-                token.kind == Token::Kind::op ? std::format("{}", Op_To_String(token.value.op)) :
+                token.kind == Token::Kind::op ? std::format("{}", Op_To_Str(token.value.op)) :
                 token.kind == Token::Kind::end_of_statement ? std::format("{}", ";") :
                 token.kind == Token::Kind::invalid ? std::format("{}", "${invalid}") : std::format("")
             )
