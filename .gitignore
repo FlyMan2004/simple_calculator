@@ -4,3 +4,4 @@ bin/
 test/tmp/
 tmp/
 compile_flags.txt
+compile_commands.json

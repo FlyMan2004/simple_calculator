@@ -10,21 +10,21 @@ objects = calculator_core.o
 
 all: $(objects)
 	mkdir -p $(Binary_Dir)
-	$(CXX) \
-	$(CXXFLAGS) $(DEBUGFLAGS) $(LDFLAGS) \
-	-o $(Binary_Dir)/calculator \
-	$(Binary_Dir)/$^
+	$(CXX) -o $(Binary_Dir)/calculator \
+		$(CXXFLAGS) $(DEBUGFLAGS) $(LDFLAGS) \
+		$(Binary_Dir)/$^
 
 test: $(Test_Dir)/test.cxx
 	mkdir -p $(Test_Dir)/tmp
-	$(CXX) \
-	$(CXXFLAGS) $(DEBUGFLAGS) $(LDFLAGS) \
-	-o $(Test_Dir)/tmp/$@ \
-	$^
+		$(CXX) -o $(Test_Dir)/tmp/$@ \
+		$(CXXFLAGS) $(DEBUGFLAGS) $(LDFLAGS) \
+		$^
 
 calculator_core.o: calculator_core.cxx
 	mkdir -p $(Binary_Dir)
-	$(CXX) \
-	$(CXXFLAGS) $(DEBUGFLAGS) -c \
-	-o $(Binary_Dir)/$@ \
-	$^
+		$(CXX) -o $(Binary_Dir)/$@ \
+		$(CXXFLAGS) $(DEBUGFLAGS) -c \
+		$^
+
+compile_command:
+	bear -- make all
