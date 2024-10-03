@@ -1,30 +1,36 @@
 CXX := c++
-CXXFLAGS := -std=c++23 -Wall -Wextra -Werror -O3 -ffast-math -flto -fno-exceptions
-# DEBUGFLAGS := -g -fsanitize=address,undefined
+CXXFLAGS := -std=c++23 -Wall -Wextra -Werror -O3 -ffast-math -flto
+# DEBUGFLAGS := -Og -g -fsanitize=address,undefined
 DEBUGFLAGS := 
-LDFLAGS := -fuse-ld=mold -Wl,--icf=all
-Binary_Dir := bin
-Test_Dir := test
+LDFLAGS := -fuse-ld=mold -Wl,--icf=all -lstdc++exp
 
-objects = calculator_core.o
+Binary := bin
+Test := test
+Src := src
+Include := include
+MACRO := SIMPLE_CALC
+
+objects := calculator_core.o expr_eval.o
 
 all: $(objects)
-	mkdir -p $(Binary_Dir)
-	$(CXX) -o $(Binary_Dir)/calculator \
+	mkdir -p $(Binary)
+	$(CXX) -o $(Binary)/calculator \
 		$(CXXFLAGS) $(DEBUGFLAGS) $(LDFLAGS) \
-		$(Binary_Dir)/$^
+		$(addprefix $(Binary)/, $^)
 
-test: $(Test_Dir)/test.cxx
-	mkdir -p $(Test_Dir)/tmp
-		$(CXX) -o $(Test_Dir)/tmp/$@ \
+test: $(Test)/test.cxx
+	mkdir -p $(Test)/tmp
+	$(CXX) -o $(Test)/tmp/$@ \
 		$(CXXFLAGS) $(DEBUGFLAGS) $(LDFLAGS) \
 		$^
 
-calculator_core.o: calculator_core.cxx
-	mkdir -p $(Binary_Dir)
-		$(CXX) -o $(Binary_Dir)/$@ \
+$(filter %.o,$(objects)): %.o: $(Src)/%.cxx
+	mkdir -p $(Binary)
+	$(CXX) -o $(Binary)/$@ \
 		$(CXXFLAGS) $(DEBUGFLAGS) -c \
+		$(addprefix -I,$(Include)) \
+		$(addprefix -D,$(MACRO))\
 		$^
 
 compile_command:
-	bear -- make all
+	bear -- $(MAKE) all

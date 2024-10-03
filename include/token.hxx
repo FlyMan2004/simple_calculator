@@ -1,68 +1,51 @@
+#pragma once
+#ifdef SIMPLE_CALC
+
+#ifndef TOKEN_HXX
+#define TOKEN_HXX
+
 #include <cctype>
 #include <cstdint>
 #include <limits>
 #include <memory>
 #include <iostream>
 #include <sstream>
-#include <string_view>
 #include <typeinfo>
-/* Add other headers here... */
 
-#define fn  auto
-#define let auto
+#include "utility.hxx"
+#include "op.hxx"
 
-enum class Op : std::uint32_t {
-    invalid = 0,
-    binary_plus,
-    binary_minus,
-};
-constexpr fn Str_To_Op(const std::string_view str) -> Op
-{
-    Op op = Op::invalid;
-    if (str == "+")
-        op = Op::binary_plus;
-    if (str == "-")
-        op = Op::binary_minus;
-    return op;
-}
-constexpr fn Op_To_Str(const Op op) -> std::string_view
-{
-    std::string_view str;
-    switch (op) {
-    case Op::invalid:
-        str = "${invalid}";
-        break;
-    case Op::binary_plus:
-        str = "+";
-        break;
-    case Op::binary_minus:
-        str = "-";
-        break;
-    }
-    return str;
-}
+namespace simple_calc {
+
 /*!
-    `EOS` for short of `end_of_statement` 
+    `EOS` is short of `EndOfStatement`
 */
-struct EOS { 
+struct EndOfStatement { 
     let static constexpr value = ';';
+};
+struct EndOfFile {
+    char static constexpr value = EOF;
 };
 
 struct Token {
     enum class Kind : std::uint32_t {
-        end_of_statement = std::numeric_limits<std::uint32_t>::max(),
+        end_of_statement = std::numeric_limits<std::uint32_t>::max() - 1,
+        end_of_file,
         invalid = 0,
         integer,
         op,
     };
     union Value {
+        [[no_unique_address]]
+        EndOfStatement end_of_statement;
+        [[no_unique_address]]
+        EndOfFile end_of_file;
         std::int32_t integer;
         Op op;
-        [[no_unique_address]]
-        EOS end_of_statement;
+
         Value() noexcept {}
         /*!
-            Ensure the union type can always be destory if it's of invalid state.
+            Ensure the union type can always be destroy if it's of invalid state.
         */
         ~Value() {}
     };
@@ -84,26 +67,30 @@ struct Token {
     ~Token()
     {
         switch (this->kind) {
+            using enum Kind;
         case Kind::invalid:
             std::destroy_at(std::addressof(this->value));
             break;
-        case Kind::integer:
-            std::destroy_at(std::addressof(this->value.integer));
-            break;
-        case Kind::op:
-            std::destroy_at(std::addressof(this->value.op));
-            break;
-        case Kind::end_of_statement:
-            std::destroy_at(std::addressof(this->value.end_of_statement));
-            break;
+
+        #define destroy_of_case(kind) \
+            case kind: \
+                std::destroy_at(std::addressof(this->value.kind)); \
+                break
+
+        destroy_of_case(integer);
+        destroy_of_case(op);
+        destroy_of_case(end_of_statement);
+        destroy_of_case(end_of_file);
+
+        #undef destroy_of_case
         }
     }
 
-    static fn Get_From_Istream() -> Token
+    static fn get_from_istream(std::istream& input = std::cin) -> Token
     {
         Token tok{ .kind = Kind::invalid, .value = {} };
         std::string tok_str = {};
-        let constexpr Advance = [] { std::cin.get(); };
+        let const Advance = [&] { input.get(); };
 
         /*
             Read token character by character.  
@@ -127,8 +114,8 @@ struct Token {
             Complete this part below.
         */
 
-        for (char ch = '\0'; std::cin.good(); ) {
-            ch = std::cin.peek();
+        for (char ch = '\0'; input.good(); ) {
+            ch = input.peek();
             if (std::isdigit(ch)) {
                 switch (tok.kind) {
                 case Kind::invalid:
@@ -147,7 +134,7 @@ struct Token {
                 switch (tok.kind) {
                 case Kind::invalid:
                     switch (ch) {
-                    case EOS::value:
+                    case EndOfStatement::value:
                         tok.kind = Kind::end_of_statement;
                         tok_str = ";";
                         Advance();
@@ -191,13 +178,18 @@ struct Token {
         case Kind::op:
             /* convert tok_str to Op and assign to tok.value */
             {
-                std::construct_at(std::addressof(tok.value.op), Str_To_Op(tok_str));
+                std::construct_at(std::addressof(tok.value.op), str_to_op(tok_str));
             }
             break;
         case Kind::end_of_statement:
             /* convert tok_str to EOS and assign to tok.value */
             {
-                std::construct_at(std::addressof(tok.value.end_of_statement), EOS{});
+                std::construct_at(std::addressof(tok.value.end_of_statement), EndOfStatement{});
+            }
+            break;
+        case Kind::end_of_file:
+            {
+                std::construct_at(std::addressof(tok.value.end_of_file), EndOfFile{});
             }
             break;
         }
@@ -206,52 +198,56 @@ struct Token {
     }
 
     /* Add other member here if needed... */
-    static fn Kind_To_Str(Kind kind) -> std::string_view
+    static fn kind_to_str(Kind kind) -> std::string_view
     {
-    #define case_to_str(var_str, enum_value)    \
-        case enum_value:                        \
-            var_str = #enum_value;              \
-            break
-
         std::string_view str;
         switch (kind) {
             using enum Kind;
+        #define case_to_str(var_name, enum_value)   \
+            case enum_value:                        \
+                var_name = #enum_value;             \
+                break
+
         case invalid:
             str = "${invalid}";
             break;
         case_to_str(str, end_of_statement);
+        case_to_str(str, end_of_file);
         case_to_str(str, integer);
         case_to_str(str, op);
+        #undef case_to_str
         }
         return str;
-    #undef case_to_str
     }
+
+    struct Log_Fn {
+        static fn operator()(Token const& token) -> void
+        {
+            static bool is_first_token = true;
+            if (!is_first_token) [[likely]] {
+                std::clog << ",\n";
+            } else [[unlikely]] {
+                is_first_token = false;
+            }
+            std::clog << std::format(
+                Token::fmt_template, 
+                "token", 
+                typeid(token).name(), 
+                Token::kind_to_str(token.kind), 
+                (
+                    token.kind == Token::Kind::integer ? std::format("{}", token.value.integer) :
+                    token.kind == Token::Kind::op ? std::format("{}", op_to_str(token.value.op)) :
+                    token.kind == Token::Kind::end_of_statement ? std::format("{}", ";") :
+                    token.kind == Token::Kind::invalid ? std::format("{}", "${invalid}") : std::format("")
+                )
+            );
+        }
+    };
+    static const Log_Fn Log;
 };
 
-/* Add anything you need here... */
-
-int main()
-{
-    /* Any code here... */
-    for (Token token = Token::Get_From_Istream(); token.kind != Token::Kind::invalid; token = Token::Get_From_Istream()) {
-        static bool is_first_token = true;
-        if (!is_first_token) [[likely]] {
-            std::cout << ",\n";
-        } else [[unlikely]] {
-            is_first_token = false;
-        }
-        std::cout << std::format(
-            Token::fmt_template, 
-            "token", 
-            typeid(token).name(), 
-            Token::Kind_To_Str(token.kind), 
-            (
-                token.kind == Token::Kind::integer ? std::format("{}", token.value.integer) :
-                token.kind == Token::Kind::op ? std::format("{}", Op_To_Str(token.value.op)) :
-                token.kind == Token::Kind::end_of_statement ? std::format("{}", ";") :
-                token.kind == Token::Kind::invalid ? std::format("{}", "${invalid}") : std::format("")
-            )
-        );
-    }
-    std::cout << std::endl;
 }
+
+#endif
+
+#endif
