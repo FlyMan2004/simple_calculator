@@ -198,7 +198,7 @@ struct Token {
     }
 
     /* Add other member here if needed... */
-    static fn kind_to_str(Kind kind) -> std::string_view
+    static fn kind_to_str(Kind kind) noexcept -> std::string_view
     {
         std::string_view str;
         switch (kind) {
@@ -215,36 +215,53 @@ struct Token {
         case_to_str(str, end_of_file);
         case_to_str(str, integer);
         case_to_str(str, op);
+
         #undef case_to_str
         }
         return str;
     }
 
-    struct Log_Fn {
-        static fn operator()(Token const& token) -> void
-        {
-            static bool is_first_token = true;
-            if (!is_first_token) [[likely]] {
-                std::clog << ",\n";
-            } else [[unlikely]] {
-                is_first_token = false;
-            }
-            std::clog << std::format(
-                Token::fmt_template, 
-                "token", 
-                typeid(token).name(), 
-                Token::kind_to_str(token.kind), 
-                (
-                    token.kind == Token::Kind::integer ? std::format("{}", token.value.integer) :
-                    token.kind == Token::Kind::op ? std::format("{}", op_to_str(token.value.op)) :
-                    token.kind == Token::Kind::end_of_statement ? std::format("{}", ";") :
-                    token.kind == Token::Kind::invalid ? std::format("{}", "${invalid}") : std::format("")
-                )
-            );
+    static fn is_valid_kind(Kind const kind) noexcept -> bool
+    {
+        switch (kind) {
+            using enum Kind;
+        case end_of_file:
+        case invalid:
+            return false;
+        default:
+            return true;
         }
-    };
-    static const Log_Fn Log;
+    }
+
+    fn is_valid() const noexcept -> bool 
+    { return is_valid_kind(this->kind); }
 };
+
+struct Log_Fn {
+    ~Log_Fn() { std::clog << std::endl; }
+    static fn operator()(Token const& token) -> void
+    {
+        static bool is_first_token = true;
+        if (!is_first_token) [[likely]] {
+            std::clog << ",\n";
+        } else [[unlikely]] {
+            is_first_token = false;
+        }
+        std::clog << std::format(
+            Token::fmt_template, 
+            "token", 
+            typeid(token).name(), 
+            Token::kind_to_str(token.kind), 
+            (
+                token.kind == Token::Kind::integer ? std::format("{}", token.value.integer) :
+                token.kind == Token::Kind::op ? std::format("{}", op_to_str(token.value.op)) :
+                token.kind == Token::Kind::end_of_statement ? std::format("{}", ";") :
+                token.kind == Token::Kind::invalid ? std::format("{}", "${invalid}") : std::format("")
+            )
+        );
+    }
+};
+static inline Log_Fn const log;
 
 }
 

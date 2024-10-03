@@ -8,17 +8,23 @@
 #include <string>
 #include <span>
 #include <expected>
+#include <exception>
 
 #include "token.hxx"
 #include "utility.hxx"
 
 namespace simple_calc {
 
-struct GrammarError {
-    std::string error_str;
+struct GrammarError : std::exception {
+    std::string reason_str;
+    GrammarError(std::string reason) noexcept
+        : reason_str(std::move(reason))
+    {}
+    virtual ~GrammarError() override = default;
+    virtual fn what() const noexcept -> char const* override { return reason_str.c_str(); }
 };
 
-extern fn expr_eval(std::span<const Token> expr_tokens) -> std::expected<std::int32_t, GrammarError>;
+extern fn expr_eval(std::span<const Token> expr_tokens) noexcept -> std::expected<std::int32_t, GrammarError>;
 
 }
 

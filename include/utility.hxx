@@ -45,13 +45,13 @@ inline fn basic_assert(
         #__VA_ARGS__, \
         "Assertion failed"\
     )
-#define PRECOND(...) \
+#define PRE_COND(...) \
     Impl::basic_assert( \
         static_cast<bool>(__VA_ARGS__), \
         #__VA_ARGS__, \
         "Pre-condition does not meet" \
     )
-#define POSTCOND(...) \
+#define POST_COND(...) \
     Impl::basic_assert( \
         static_cast<bool>(__VA_ARGS__), \
         #__VA_ARGS__, \
