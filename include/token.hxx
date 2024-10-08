@@ -7,9 +7,7 @@
 #include <cctype>
 #include <cstdint>
 #include <limits>
-#include <memory>
 #include <iostream>
-#include <sstream>
 #include <typeinfo>
 
 #include "utility.hxx"
@@ -20,7 +18,7 @@ namespace simple_calc {
 /*!
     `EOS` is short of `EndOfStatement`
 */
-struct EndOfStatement { 
+struct EndOfStmt { 
     let static constexpr value = ';';
 };
 struct EndOfFile {
@@ -37,7 +35,7 @@ struct Token {
     };
     union Value {
         [[no_unique_address]]
-        EndOfStatement end_of_statement;
+        EndOfStmt end_of_statement;
         [[no_unique_address]]
         EndOfFile end_of_file;
         std::int32_t integer;
@@ -45,8 +43,8 @@ struct Token {
 
         Value() noexcept {}
         /*!
-            Ensure the union type can always be destroy if it's of invalid state.
-        */
+         *  Ensure the union type can always be destroy if it's of invalid state.
+         */
         ~Value() {}
     };
 
@@ -64,162 +62,9 @@ struct Token {
         "   \"value\": \"{}\"" "\n"
         "}}";
 
-    ~Token()
-    {
-        switch (this->kind) {
-            using enum Kind;
-        case Kind::invalid:
-            std::destroy_at(std::addressof(this->value));
-            break;
+    ~Token();
 
-        #define destroy_of_case(kind) \
-            case kind: \
-                std::destroy_at(std::addressof(this->value.kind)); \
-                break
-
-        destroy_of_case(integer);
-        destroy_of_case(op);
-        destroy_of_case(end_of_statement);
-        destroy_of_case(end_of_file);
-
-        #undef destroy_of_case
-        }
-    }
-
-    static fn get_from_istream(std::istream& input = std::cin) -> Token
-    {
-        Token tok{ .kind = Kind::invalid, .value = {} };
-        std::string tok_str = {};
-        let const Advance = [&] { input.get(); };
-
-        /*
-            Read token character by character.  
-            Possible states for ${ch}:
-                - null  ( ch == '\0' )
-                - digit ( isdigit(ch) == true )
-                - punct ( ispunct(ch) == true && (ch == ';' || ch == '+' || ch == '-') )
-                - space ( isspace(ch) == true )
-                - invalid ( otherwise )
-
-            State transformation:
-                null  \
-                space ----> digit: token is a integer
-                        |-> punct: token is an operator or EOS
-                        |-> space: ignore
-                        `-> invalid: invalid token
-                digit ----> digit: append digit to ${tok_str}
-                        `-> punct, space, invalid: token is completed
-                punct ----> ${any}: token is completed
-            
-            Complete this part below.
-        */
-
-        for (char ch = '\0'; input.good(); ) {
-            ch = input.peek();
-            if (std::isdigit(ch)) {
-                switch (tok.kind) {
-                case Kind::invalid:
-                    tok.kind = Kind::integer;
-                    [[fallthrough]];
-                case Kind::integer:
-                    tok_str.push_back(ch);
-                    break;
-                default:
-                    goto token_end;
-                }
-                Advance();
-                continue;
-            }
-            if (std::ispunct(ch)) {
-                switch (tok.kind) {
-                case Kind::invalid:
-                    switch (ch) {
-                    case EndOfStatement::value:
-                        tok.kind = Kind::end_of_statement;
-                        tok_str = ";";
-                        Advance();
-                        goto token_end;
-                    default:
-                        tok.kind = Kind::op;
-                        tok_str.push_back(ch);
-                    }
-                    break;
-                default:
-                    goto token_end;
-                }
-                Advance();
-                continue;
-            }
-            if (std::isspace(ch)) {
-                Advance();
-                if (tok.kind != Kind::invalid) {
-                    goto token_end;
-                } else {
-                    continue;
-                }
-            }
-            /* if (ch is invalid) */
-            goto token_end;
-        }
-    token_end:
-
-        std::destroy_at(std::addressof(tok.value));
-        switch (std::stringstream ss{tok_str}; tok.kind) {
-        case Kind::invalid:
-            break;
-        case Kind::integer:
-            /* convert tok_str to integer and assign to tok.value */
-            {
-                std::int32_t integer;
-                ss >> integer;
-                std::construct_at(std::addressof(tok.value.integer), std::move(integer));
-            }
-            break;
-        case Kind::op:
-            /* convert tok_str to Op and assign to tok.value */
-            {
-                std::construct_at(std::addressof(tok.value.op), str_to_op(tok_str));
-            }
-            break;
-        case Kind::end_of_statement:
-            /* convert tok_str to EOS and assign to tok.value */
-            {
-                std::construct_at(std::addressof(tok.value.end_of_statement), EndOfStatement{});
-            }
-            break;
-        case Kind::end_of_file:
-            {
-                std::construct_at(std::addressof(tok.value.end_of_file), EndOfFile{});
-            }
-            break;
-        }
-
-        return tok;
-    }
-
-    /* Add other member here if needed... */
-    static fn kind_to_str(Kind kind) noexcept -> std::string_view
-    {
-        std::string_view str;
-        switch (kind) {
-            using enum Kind;
-        #define case_to_str(var_name, enum_value)   \
-            case enum_value:                        \
-                var_name = #enum_value;             \
-                break
-
-        case invalid:
-            str = "${invalid}";
-            break;
-        case_to_str(str, end_of_statement);
-        case_to_str(str, end_of_file);
-        case_to_str(str, integer);
-        case_to_str(str, op);
-
-        #undef case_to_str
-        }
-        return str;
-    }
+    static fn kind_to_str(Kind kind) noexcept -> std::string_view;
 
     static fn is_valid_kind(Kind const kind) noexcept -> bool
     {
