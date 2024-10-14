@@ -39,6 +39,8 @@ inline fn basic_assert(
 
 }
 
+#define unreachable __builtin_unreachable
+
 #define ASSERT(...) \
     Impl::basic_assert( \
         static_cast<bool>(__VA_ARGS__), \
@@ -57,7 +59,9 @@ inline fn basic_assert(
         #__VA_ARGS__, \
         "Post-condition does not meet" \
     )
+
 }
+
 
 #endif
 

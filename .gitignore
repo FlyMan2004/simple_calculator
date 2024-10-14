@@ -2,5 +2,6 @@ bin/
 .vscode/
 .cache/
 **/tmp/
+**/*.bak
 compile_flags.txt
 compile_commands.json

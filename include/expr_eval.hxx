@@ -1,4 +1,5 @@
 #pragma once
+#include <stdexcept>
 #ifdef SIMPLE_CALC
 
 #ifndef EXPR_EVAL_HXX
@@ -23,12 +24,15 @@ struct GrammarError : std::exception {
     virtual ~GrammarError() override = default;
     virtual fn what() const noexcept -> char const* override { return reason_str.c_str(); }
 };
+struct RangeError : std::range_error {
+    using std::range_error::range_error;
+};
 
 extern fn expr_eval(std::span<const Token> expr_tokens) noexcept -> std::expected<std::int32_t, GrammarError>;
 
 }
 
 
-#endif
+#endif /* EXPR_EVAL_HXX */
 
-#endif
+#endif /* SIMPLE_CALC */
