@@ -1,7 +1,7 @@
 CXX := c++
-CXXFLAGS := -std=c++23 -Wall -Wextra -O3 -ffast-math -flto
-DEBUGFLAGS := -Wno-error=deprecated-declarations -Werror -Og -g -fsanitize=address,undefined
-# DEBUGFLAGS := 
+CXXFLAGS := -std=c++23 -Wall -Wextra -flto -march=native -mtune=native
+DEBUGFLAGS := -Wno-error=deprecated-declarations -Werror -Og -g -fsanitize=address,undefined -DDEBUG
+# DEBUGFLAGS := -O3 -ffast-math
 LDFLAGS := -fuse-ld=mold -Wl,--icf=all -lstdc++exp
 
 Binary := bin

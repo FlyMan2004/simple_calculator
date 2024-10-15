@@ -34,7 +34,7 @@ public:
     fn mul_div(std::optional<EvalResult> evaluated_value = std::nullopt) -> EvalResult;
     fn mul_div_tail(std::optional<EvalResult> evaluated_value = std::nullopt) -> std::optional<EvalResult>;
     fn operand(std::optional<EvalResult> evaluated_value = std::nullopt) -> EvalResult;
-    fn next_token() -> void;
+    fn advance_token(std::size_t count = 1) -> void;
     fn consume_token(std::function<bool(Token const&)> predicate) -> Token;
     /*!
      * @param op never be `Op::invalid`
@@ -70,14 +70,14 @@ fn Parser::add_sub_tail(std::optional<EvalResult> evaluated_value) -> std::optio
         return token.kind == Token::Kind::op;
     });
     if (op.value.op != Op::addition && op.value.op != Op::subtraction) {
-        return std::nullopt;
+        return evaluated_value;
     }
     
-    this->next_token();
+    this->advance_token();
     this->state.push(State::add_sub_tail);
-    this->state.push(State::operand);
-    let const result_operand = this->operand();
-    let const result_eval = Parser::evaluate(op.value.op, std::array{evaluated_value.value(), result_operand});
+    this->state.push(State::mul_div);
+    let const result_mul_div = this->mul_div();
+    let const result_eval = Parser::evaluate(op.value.op, std::array{evaluated_value.value(), result_mul_div});
     return this->add_sub_tail(result_eval);
 }
 fn Parser::mul_div(std::optional<EvalResult> evaluated_value [[maybe_unused]]) -> EvalResult
@@ -106,10 +106,10 @@ fn Parser::mul_div_tail(std::optional<EvalResult> evaluated_value) -> std::optio
         return token.kind == Token::Kind::op;
     });
     if (op.value.op != Op::multiplication && op.value.op != Op::division) {
-        return std::nullopt;
+        return evaluated_value;
     }
     
-    this->next_token();
+    this->advance_token();
     this->state.push(State::mul_div_tail);
     this->state.push(State::operand);
     let const result_operand = this->operand();
@@ -125,12 +125,12 @@ fn Parser::operand(std::optional<EvalResult> evaluated_value [[maybe_unused]]) -
     let const operand = this->consume_token([](Token const& token) -> bool {
         return token.kind == Token::Kind::integer;
     });
-    this->next_token();
+    this->advance_token();
     return operand.value.integer;
 }
-fn Parser::next_token() -> void
+fn Parser::advance_token(std::size_t count) -> void
 {
-    this->input_tokens = this->input_tokens.subspan(1);
+    this->input_tokens = this->input_tokens.subspan(count);
 }
 fn Parser::consume_token(std::function<bool(Token const&)> predicate) -> Token
 {
@@ -178,10 +178,10 @@ fn expr_eval(std::span<const Token> expr_tokens) noexcept -> std::expected<std::
     Parser parser;
     parser.state.push(Parser::State::add_sub);
     parser.input_tokens = expr_tokens;
-    try {
+    __try {
         let const result = parser.add_sub();
         return result;
-    } catch (GrammarError const& e) {
+    } __catch (GrammarError const& e) {
         return std::unexpected(e);
     }
 }
