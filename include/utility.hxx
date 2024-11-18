@@ -68,8 +68,8 @@ inline fn basic_assert(
         bool const expr = __VA_ARGS__; \
         std::string_view const expr_str = #__VA_ARGS__; \
         Impl::basic_assert( \
-            static_cast<bool>(__VA_ARGS__), \
-            #__VA_ARGS__, \
+            static_cast<bool>(expr), \
+            expr_str, \
             "Post-condition does not meet" \
         ); \
     } while (0)
