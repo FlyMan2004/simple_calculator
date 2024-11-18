@@ -41,24 +41,49 @@ inline fn basic_assert(
 
 #define unreachable __builtin_unreachable
 
+#ifdef DEBUG
+
 #define ASSERT(...) \
-    Impl::basic_assert( \
-        static_cast<bool>(__VA_ARGS__), \
-        #__VA_ARGS__, \
-        "Assertion failed"\
-    )
+    do { \
+        bool const expr = __VA_ARGS__; \
+        std::string_view const expr_str = #__VA_ARGS__; \
+        Impl::basic_assert( \
+            expr, \
+            expr_str, \
+            "Assertion failed" \
+        ); \
+    } while (0)
 #define PRE_COND(...) \
-    Impl::basic_assert( \
-        static_cast<bool>(__VA_ARGS__), \
-        #__VA_ARGS__, \
+    do { \
+        bool const expr = __VA_ARGS__; \
+        std::string_view const expr_str = #__VA_ARGS__; \
+        Impl::basic_assert( \
+        expr, \
+        expr_str, \
         "Pre-condition does not meet" \
-    )
+        ); \
+    } while (0)
 #define POST_COND(...) \
-    Impl::basic_assert( \
-        static_cast<bool>(__VA_ARGS__), \
-        #__VA_ARGS__, \
-        "Post-condition does not meet" \
-    )
+    do { \
+        bool const expr = __VA_ARGS__; \
+        std::string_view const expr_str = #__VA_ARGS__; \
+        Impl::basic_assert( \
+            static_cast<bool>(__VA_ARGS__), \
+            #__VA_ARGS__, \
+            "Post-condition does not meet" \
+        ); \
+    } while (0)
+
+#else
+
+#define ASSERT(...) \
+    do { } while (0)
+#define PRE_COND(...) \
+    do { } while (0)
+#define POST_COND(...) \
+    do { } while (0)
+
+#endif
 
 }
 
