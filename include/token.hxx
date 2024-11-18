@@ -15,9 +15,9 @@
 
 namespace simple_calc {
 
-/*!
-    `EOS` is short of `EndOfStatement`
-*/
+/*
+ *  `EOS` is short of `EndOfStatement`
+ */
 struct EndOfStmt { 
     let static constexpr value = ';';
 };
@@ -42,7 +42,7 @@ struct Token {
         Op op;
 
         Value() noexcept {}
-        /*!
+        /*
          *  Ensure the union type can always be destroy if it's of invalid state.
          */
         ~Value() {}
@@ -51,10 +51,10 @@ struct Token {
     Kind kind;
     Value value;
 
-    /*!
-        Use following template to generate output with std::format().
-        See [std::format - cppreference.com](https://en.cppreference.com/w/cpp/utility/format/format) for doc.
-    */
+    /*
+     *  Use following template to generate output with std::format().
+     *  See [std::format - cppreference.com](https://en.cppreference.com/w/cpp/utility/format/format) for doc.
+     */
     let static constexpr fmt_template = 
         "\"{}\": {{" "\n"
         "   \"variable_type\": \"{}\"," "\n"
