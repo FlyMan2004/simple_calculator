@@ -1,3 +1,5 @@
+.PHONY: all test compile_command
+
 CXX := c++
 CXXFLAGS := -std=c++23 -Wall -Wextra -flto -march=native -mtune=native
 DEBUGFLAGS := -Wno-error=deprecated-declarations -Werror -Og -g -fsanitize=address,undefined -DDEBUG
