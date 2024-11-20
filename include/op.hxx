@@ -1,8 +1,8 @@
 #pragma once
 #ifdef SIMPLE_CALC
 
-#ifndef OP_CXX
-#define OP_CXX
+#ifndef OP_HXX
+#define OP_HXX
 
 #include <cstdint>
 #include <limits>
@@ -63,6 +63,6 @@ constexpr inline fn op_to_str(const Op op) -> std::string_view
 
 }
 
-#endif
+#endif // OP_HXX
 
-#endif
+#endif // SIMPLE_CALC
