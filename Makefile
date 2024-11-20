@@ -12,7 +12,7 @@ Src := src
 Include := include
 MACRO := SIMPLE_CALC
 
-objects := calculator_core.o expr_eval.o lexer.o token.o
+objects := calculator_core.o Parser.o lexer.o token.o
 
 all: $(objects)
 	mkdir -p $(Binary)

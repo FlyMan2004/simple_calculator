@@ -6,7 +6,7 @@
 
 #include "token.hxx"
 #include "lexer.hxx"
-#include "expr_eval.hxx"
+#include "Parser.hxx"
 #include "utility.hxx"
 
 fn get_stmt(simple_calc::Lexer &lexer) -> std::vector<simple_calc::Token>
@@ -44,11 +44,10 @@ int main()
             std::cerr << "An error is omitted. Exit..." << std::endl;
             return EXIT_FAILURE;
         }
-        let const result = expr_eval({statement.cbegin(), statement.cend() - 1});
-        if (!result.has_value()) {
-            std::cerr << result.error().what() << std::endl;
-            break;
-        }
-        std::cout << std::format("{}\n", result.value());
+        let parser = Parser({statement.cbegin(), statement.cend()});
+        let const result = parser.get_ast()->evaluate();
+        let const json = parser.get_ast()->to_string(JSON::Type::object);
+        std::clog << json << std::endl;
+        std::cout << std::format("{}\n", result);
     }
 }
