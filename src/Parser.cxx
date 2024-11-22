@@ -40,40 +40,32 @@ auto Parser::add_sub() -> std::shared_ptr<AST::ASTNode>
     this->m_state.push(State::add_sub_tail);
     this->m_state.push(State::mul_div);
 
-    auto lhs = this->mul_div();
-    auto ast = this->add_sub_tail(std::move(lhs));
-    
-    return ast;
-}
+    std::shared_ptr<AST::ASTNode> lhs = this->mul_div();
+    std::shared_ptr<AST::ASTNode> ast = nullptr;
 
-auto Parser::add_sub_tail(std::shared_ptr<AST::ASTNode> lhs) -> std::shared_ptr<AST::ASTNode>
-{
-    if (this->m_state.top() != State::add_sub_tail) [[unlikely]]
-        throw std::runtime_error("Unexpected state");
+    while (!this->m_input_tokens.empty()) {
+        if (this->m_state.top() != State::add_sub_tail) [[unlikely]]
+            throw std::runtime_error("Unexpected state");
+        
+        this->m_state.pop();
 
-    this->m_state.pop();
-    if (this->m_input_tokens.empty())
-    {
-        return lhs;
+        auto const op = this->consume_token([](Token const& token) -> bool {
+            return token.kind == Token::Kind::op;
+        }).value.op;
+
+        if (op != Op::addition && op != Op::subtraction)
+            break;
+
+        this->advance_token();
+        this->m_state.push(State::add_sub_tail);
+        this->m_state.push(State::mul_div);
+
+        std::shared_ptr<AST::ASTNode> rhs = this->mul_div();
+        ast = std::make_shared<AST::BinaryOperatorNode>(op, std::move(lhs), std::move(rhs));
+        lhs = std::move(ast);
     }
 
-    auto const op = this->consume_token([](Token const& token) -> bool {
-        return token.kind == Token::Kind::op;
-    }).value.op;
-
-    if (op != Op::addition && op != Op::subtraction)
-    {
-        return lhs;
-    }
-
-    this->advance_token();
-    this->m_state.push(State::add_sub_tail);
-    this->m_state.push(State::mul_div);
-
-    auto rhs = this->mul_div();
-    auto ast = std::make_shared<AST::BinaryOperatorNode>(op, std::move(lhs), std::move(rhs));
-
-    return add_sub_tail(std::move(ast));
+    return ast == nullptr ? lhs : ast;
 }
 
 auto Parser::mul_div() -> std::shared_ptr<AST::ASTNode>
@@ -85,40 +77,33 @@ auto Parser::mul_div() -> std::shared_ptr<AST::ASTNode>
     this->m_state.push(State::mul_div_tail);
     this->m_state.push(State::operand);
 
-    auto lhs = this->operand();
-    auto ast = this->mul_div_tail(std::move(lhs));
+    std::shared_ptr<AST::ASTNode> lhs = this->operand();
+    // auto ast = this->mul_div_tail(std::move(lhs));
 
-    return ast;
-}
+    std::shared_ptr<AST::ASTNode> ast = nullptr;
+    while (!this->m_input_tokens.empty()) {
+        if (this->m_state.top() != State::mul_div_tail) [[unlikely]]
+            throw std::runtime_error("Unexpected state");
 
-auto Parser::mul_div_tail(std::shared_ptr<AST::ASTNode> lhs) -> std::shared_ptr<AST::ASTNode>
-{
-    if (this->m_state.top() != State::mul_div_tail) [[unlikely]]
-        throw std::runtime_error("Unexpected state");
+        this->m_state.pop();
 
-    this->m_state.pop();
-    if (this->m_input_tokens.empty())
-    {
-        return lhs;
+        auto const op = this->consume_token([](Token const& token) -> bool {
+            return token.kind == Token::Kind::op;
+        }).value.op;
+
+        if (op != Op::multiplication && op != Op::division)
+            break;
+
+        this->advance_token();
+        this->m_state.push(State::mul_div_tail);
+        this->m_state.push(State::operand);
+
+        std::shared_ptr<AST::ASTNode> rhs = this->operand();
+        ast = std::make_shared<AST::BinaryOperatorNode>(op, std::move(lhs), std::move(rhs));
+        lhs = std::move(ast);
     }
 
-    auto const op = this->consume_token([](Token const& token) -> bool {
-        return token.kind == Token::Kind::op;
-    }).value.op;
-
-    if (op != Op::multiplication && op != Op::division)
-    {
-        return lhs;
-    }
-
-    this->advance_token();
-    this->m_state.push(State::mul_div_tail);
-    this->m_state.push(State::operand);
-
-    auto rhs = this->operand();
-    auto ast = std::make_shared<AST::BinaryOperatorNode>(op, std::move(lhs), std::move(rhs));
-
-    return this->mul_div_tail(std::move(ast));
+    return ast == nullptr ? lhs : ast;
 }
 
 auto Parser::operand() -> std::shared_ptr<AST::IntegerNode>

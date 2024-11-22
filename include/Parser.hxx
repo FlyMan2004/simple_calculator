@@ -48,9 +48,7 @@ protected:
     void parse();
     auto statement() -> std::shared_ptr<AST::StatementNode>;
     auto add_sub() -> std::shared_ptr<AST::ASTNode>;
-    auto add_sub_tail(std::shared_ptr<AST::ASTNode> lhs) -> std::shared_ptr<AST::ASTNode>;
     auto mul_div() -> std::shared_ptr<AST::ASTNode>;
-    auto mul_div_tail(std::shared_ptr<AST::ASTNode> lhs) -> std::shared_ptr<AST::ASTNode>;
     auto operand() -> std::shared_ptr<AST::IntegerNode>;
     void advance_token(std::size_t count = 1);
     auto consume_token(std::function<bool(Token const&)> predicate) -> Token;
