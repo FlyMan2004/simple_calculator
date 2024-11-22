@@ -34,6 +34,8 @@ public:
     virtual auto evaluate() const -> EvalResult override
     {
         EvalResult result;
+        if (!m_lhs || !m_rhs)
+            throw std::logic_error("Invalid operand");
         switch (m_op) {
             using enum simple_calc::Op;
         case addition:
@@ -77,8 +79,8 @@ public:
             "}}",
             std::type_index(typeid(*this)).name(),
             simple_calc::op_to_str(m_op),
-            m_lhs->to_string(JSON::Type::object),
-            m_rhs->to_string(JSON::Type::object)
+            m_lhs ? m_lhs->to_string(JSON::Type::object) : "null",
+            m_rhs ? m_rhs->to_string(JSON::Type::object) : "null"
         );
             break;
         }
