@@ -71,17 +71,17 @@ public:
             [[fallthrough]];
         case object:
             result = std::format(
-            "{{\n"
-            "  \"type\": \"{}\"\n"
-            "  \"op\": \"{}\"\n"
-            "  \"lhs\": {}\n"
-            "  \"rhs\": {}\n"
-            "}}",
-            std::type_index(typeid(*this)).name(),
-            simple_calc::op_to_str(m_op),
-            m_lhs ? m_lhs->to_string(JSON::Type::object) : "null",
-            m_rhs ? m_rhs->to_string(JSON::Type::object) : "null"
-        );
+                "{{\n"
+                "  \"type\": \"{}\"\n"
+                "  \"op\": \"{}\"\n"
+                "  \"lhs\": {}\n"
+                "  \"rhs\": {}\n"
+                "}}",
+                std::type_index(typeid(*this)).name(),
+                simple_calc::op_to_str(m_op),
+                m_lhs ? m_lhs->to_string(JSON::Type::object) : "null",
+                m_rhs ? m_rhs->to_string(JSON::Type::object) : "null"
+            );
             break;
         }
         return result;
