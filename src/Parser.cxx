@@ -23,9 +23,9 @@ auto Parser::statement() -> std::shared_ptr<AST::StatementNode>
         this->m_state.push(State::add_sub);
         expr = this->add_sub();
     }
-    auto const end_of_stmt = this->consume_token([](Token const& token) -> bool {
+    auto const end_of_stmt [[maybe_unused]] = this->consume_token([](Token const& token) -> bool {
         return token.kind == Token::Kind::end_of_statement;
-    });
+    }).value.end_of_statement;
     this->advance_token();
 
     return std::make_shared<AST::StatementNode>(std::move(expr));
@@ -46,7 +46,7 @@ auto Parser::add_sub() -> std::shared_ptr<AST::ASTNode>
     while (!this->m_input_tokens.empty()) {
         if (this->m_state.top() != State::add_sub_tail) [[unlikely]]
             throw std::runtime_error("Unexpected state");
-        
+
         this->m_state.pop();
 
         auto const op = this->consume_token([](Token const& token) -> bool {
