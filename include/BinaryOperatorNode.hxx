@@ -1,9 +1,13 @@
 #pragma once
 
+#include "utility.hxx"
+#include <stdexcept>
+#include <variant>
 #ifndef BINARY_OPERATOR_NODE_HXX
 #define BINARY_OPERATOR_NODE_HXX
 
 #include <typeindex>
+#include <memory>
 #include "ASTNode.hxx"
 #include "op.hxx"
 
@@ -13,6 +17,104 @@ namespace simple_calc::AST
 class BinaryOperatorNode
     : public ASTNode
 {
+private:
+    // static auto evaluate_impl(simple_calc::Op op, auto const& lhs, auto const& rhs) -> EvalResult
+    struct evaluate_impl
+    {
+        const simple_calc::Op op;
+        struct Plus
+        {
+            template <typename T_lhs, typename T_rhs>
+            static auto operator()(T_lhs const& lhs, T_rhs const& rhs) noexcept(noexcept(lhs + rhs)) -> EvalResult
+                requires requires { lhs + rhs; }
+            {
+                return lhs + rhs;
+            }
+            template <std::formattable<char> T_lhs, std::formattable<char> T_rhs>
+            static auto operator()(T_lhs const& lhs, T_rhs const& rhs) -> EvalResult
+                requires (!std::same_as<T_lhs, T_rhs> && (std::same_as<T_lhs, std::string> || std::same_as<T_rhs, std::string>))
+            {
+                return std::format("{}{}", lhs, rhs);
+            }
+            static auto operator()(auto const&, auto const&) -> EvalResult
+            {
+                throw std::logic_error("Invalid operand");
+                return EvalResult{};
+            }
+        } constexpr static plus{};
+
+        struct Minus
+        {
+            template <typename T_lhs, typename T_rhs>
+            static auto operator()(T_lhs const& lhs, T_rhs const& rhs) noexcept(noexcept(lhs - rhs)) -> EvalResult
+                requires requires { lhs - rhs; }
+            {
+                return lhs - rhs;
+            }
+            static auto operator()(auto const&, auto const&) -> EvalResult
+            {
+                throw std::logic_error("Invalid operand");
+                return EvalResult{};
+            }
+        } constexpr static minus{};
+
+        struct Multiply
+        {
+            template <typename T_lhs, typename T_rhs>
+            static auto operator()(T_lhs const& lhs, T_rhs const& rhs) -> EvalResult
+                requires requires { lhs * rhs; }
+            {
+                return lhs * rhs;
+            }
+            static auto operator()(auto const&, auto const&) -> EvalResult
+            {
+                throw std::logic_error("Invalid operand");
+                return EvalResult{};
+            }
+        } constexpr static multiply{};
+
+        struct Divide
+        {
+            template <typename T_lhs, typename T_rhs>
+            static auto operator()(T_lhs const& lhs, T_rhs const& rhs) noexcept(noexcept(lhs / rhs)) -> EvalResult
+                requires requires { lhs / rhs; }
+            {
+                return lhs / rhs;
+            }
+            static auto operator()(auto const&, auto const&) -> EvalResult
+            {
+                throw std::logic_error("Invalid operand");
+                return EvalResult{};
+            }
+        } constexpr static divide{};
+
+        auto operator()(auto const& lhs, auto const& rhs) const && -> EvalResult
+        {
+            [[assume(op != simple_calc::Op::invalid)]];
+            EvalResult result;
+            switch (op) {
+                using enum simple_calc::Op;
+            case addition:
+                result = plus(lhs, rhs);
+                break;
+            case subtraction:
+                result = minus(lhs, rhs);
+                break;
+            case multiplication:
+                result = multiply(lhs, rhs);
+                break;
+            case division:
+                result = divide(lhs, rhs);
+                break;
+            default:
+                unreachable();
+            };
+            return result;
+        }
+
+        auto operator()(auto const&, auto const&) const & -> EvalResult = delete("`evaluate_impl` should be used as a temporary object");
+    };
+
 protected:
     simple_calc::Op m_op;
     std::shared_ptr<ASTNode> m_lhs;
@@ -25,8 +127,8 @@ public:
         std::shared_ptr<ASTNode> rhs
     )
         : m_op(op)
-        , m_lhs(lhs)
-        , m_rhs(rhs)
+        , m_lhs(std::move(lhs))
+        , m_rhs(std::move(rhs))
     {}
 
     virtual ~BinaryOperatorNode() = default;
@@ -36,19 +138,15 @@ public:
         EvalResult result;
         if (!m_lhs || !m_rhs)
             throw std::logic_error("Invalid operand");
+        auto lhs = m_lhs->evaluate();
+        auto rhs = m_rhs->evaluate();
         switch (m_op) {
             using enum simple_calc::Op;
-        case addition:
-            result = m_lhs->evaluate() + m_rhs->evaluate();
-            break;
-        case subtraction:
-            result = m_lhs->evaluate() - m_rhs->evaluate();
-            break;
-        case multiplication:
-            result = m_lhs->evaluate() * m_rhs->evaluate();
-            break;
+        case addition: [[fallthrough]];
+        case subtraction: [[fallthrough]];
+        case multiplication: [[fallthrough]];
         case division:
-            result = m_lhs->evaluate() / m_rhs->evaluate();
+            result = std::visit(evaluate_impl{m_op}, lhs, rhs);
             break;
         default:
             throw std::logic_error("Invalid operator");

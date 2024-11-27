@@ -3,11 +3,9 @@
 #ifndef AST_NODE_HXX
 #define AST_NODE_HXX
 
-#include <memory>
 #include <string>
 #include <cstdint>
-#include <concepts>
-#include "utility.hxx"
+#include <variant>
 #include "JSON.hxx"
 
 namespace simple_calc::AST
@@ -16,10 +14,7 @@ namespace simple_calc::AST
 class ASTNode
 {
 public:
-    template <std::integral T>
-    using NonMin = T;
-
-    using EvalResult = NonMin<std::int32_t>;
+    using EvalResult = std::variant<std::nullptr_t, bool, std::int64_t, long double, std::string>;
 
     virtual ~ASTNode() = default;
 
