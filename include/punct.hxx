@@ -49,8 +49,10 @@ struct Punct {
     } value;
 
     let static constexpr fmt_template = 
-        "\"{}\": {{" "\n"
+        "{{" "\n"
+        "   \"variable_name\": \"{}\"," "\n"
         "   \"variable_type\": \"{}\"," "\n"
+        "   \"value\": \"{}\"" "\n"
         "}}";
 
     Punct(Kind kind = Kind::invalid) noexcept

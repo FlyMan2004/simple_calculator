@@ -80,9 +80,9 @@ fn Lexer::get_token() -> Token
             switch (tok.kind) {
                 using enum Token::Kind;
             case invalid:
-                tok.kind = integer;
+                tok.kind = literal;
                 [[fallthrough]];
-            case integer:
+            case literal:
                 tok_str.push_back(ch);
                 break;
             default:
@@ -130,12 +130,10 @@ token_end:
         using enum Token::Kind;
     case invalid:
         break;
-    case integer:
+    case literal:
         /* convert tok_str to integer and assign to tok.value */
         {
-            std::int32_t integer;
-            ss >> integer;
-            std::construct_at(std::addressof(tok.value.integer), std::move(integer));
+            ASSERT(false);
         }
         break;
     case op:

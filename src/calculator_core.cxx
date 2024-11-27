@@ -15,8 +15,7 @@ fn get_stmt(simple_calc::Lexer &lexer) -> std::vector<simple_calc::Token>
     std::vector<Token> tokens;
     do {
         tokens.push_back(lexer.get_token());
-        log(tokens.back());
-    } while (tokens.back().is_valid());
+    } while (tokens.back().is_valid() && tokens.back().kind != Token::Kind::end_of_statement);
     POST_COND(!tokens.empty());
     return tokens;
 }
