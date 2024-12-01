@@ -341,9 +341,6 @@ Before you start to rewrite your code, there is **still some other work** to do:
 ### Background Knowledge
 
 - **Regular Expression**
-- **Recursion**
-- **Recursive Descent Parser**
-- ...
 
 <!-- TODO: Complete this section... -->
 
