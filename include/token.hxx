@@ -8,8 +8,6 @@
 #include <cstdint>
 #include <string>
 #include <limits>
-#include <iostream>
-#include <typeinfo>
 
 #include "utility.hxx"
 #include "literal.hxx"
@@ -20,7 +18,7 @@ namespace simple_calc {
 /*
  *  `EOS` is short of `EndOfStatement`
  */
-struct EndOfStmt { 
+struct EndOfStmt {
     let static constexpr value = ';';
 };
 struct EndOfFile {
@@ -29,11 +27,11 @@ struct EndOfFile {
 
 struct Token {
     enum class Kind : std::uint32_t {
-        end_of_statement = std::numeric_limits<std::uint32_t>::max() - 1,
-        end_of_file,
-        invalid = 0,
-        literal,
-        op,
+        end_of_statement    = std::numeric_limits<std::uint32_t>::max() - 1,
+        end_of_file         = 4294967295,
+        invalid             = 0,
+        literal             = 1,
+        op                  = 2,
     };
     union Value {
         [[no_unique_address]]
@@ -58,7 +56,7 @@ struct Token {
      *  Use following template to generate output with std::format().
      *  See [std::format - cppreference.com](https://en.cppreference.com/w/cpp/utility/format/format) for doc.
      */
-    let static constexpr fmt_template = 
+    let static constexpr fmt_template =
         "{{" "\n"
         "   \"variable_name\": \"{}\"," "\n"
         "   \"variable_type\": \"{}\"," "\n"
@@ -82,7 +80,7 @@ struct Token {
         }
     }
 
-    fn is_valid() const noexcept -> bool 
+    fn is_valid() const noexcept -> bool
     { return is_valid_kind(this->kind); }
 }; // struct Token
 

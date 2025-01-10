@@ -36,13 +36,18 @@ struct Literal {
         Value(Value&&) noexcept = default;
         Value& operator=(Value const&) noexcept = default;
         Value& operator=(Value&&) noexcept = default;
+        Value(std::nullptr_t) noexcept : nil{} {}
+        Value(bool value) noexcept : boolean{ value } {}
+        Value(std::int64_t value) noexcept : integer{ value } {}
+        Value(long double value) noexcept : floating_point{ value } {}
+        Value(std::string_view value) noexcept : string{ value } {}
         ~Value() {}
     };
 
     Kind kind;
     Value value;
 
-    let static constexpr fmt_template = 
+    let static constexpr fmt_template =
         "{{" "\n"
         "   \"variable_name\": \"{}\"," "\n"
         "   \"variable_type\": \"{}\"," "\n"

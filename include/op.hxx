@@ -13,16 +13,16 @@ namespace simple_calc {
 
 /*!
  * `Op` is short of `Operator`. But it should be produced during **parsing**.
- * E.g. 
+ * E.g.
  * - In C++, `-` can be used as both binary minus operator and unary minus operator.
  * - `>>` can be right shift operator or two `>` parentheses which denote the end of template arguments like `std::vector<std::vector<int>>`.
  */
 enum class Op : std::uint32_t {
-    invalid = std::numeric_limits<std::uint32_t>::max(),
-    addition = (0x00 << 24) + 0x000000,
-    subtraction,
-    multiplication = (0x01 << 24) + 0x000000,
-    division,
+    invalid         = std::numeric_limits<std::uint32_t>::max(),
+    addition        = (0x00 << 24) + 0x000000,
+    subtraction     = (0x00 << 24) + 0x000001,
+    multiplication  = (0x01 << 24) + 0x000000,
+    division        = (0x01 << 24) + 0x000001,
 };
 [[deprecated("String may be not clear to tell which is selected")]]
 constexpr inline fn str_to_op(const std::string_view str) -> Op
@@ -38,7 +38,7 @@ constexpr inline fn str_to_op(const std::string_view str) -> Op
         op = Op::division;
     return op;
 }
-constexpr inline fn op_to_str(const Op op) -> std::string_view
+constexpr fn op_to_str(const Op op) -> std::string_view
 {
     std::string_view str;
     switch (op) {

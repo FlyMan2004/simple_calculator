@@ -19,14 +19,16 @@ namespace Impl {
 
 [[gnu::always_inline]]
 inline fn basic_assert(
-    bool const cond, 
+    bool const cond,
     std::string_view const msg,
     std::string_view const failure_kind,
-    std::source_location const loc = std::source_location::current(), 
+    std::source_location const loc = std::source_location::current(),
     std::stacktrace const st = std::stacktrace::current()
 ) noexcept -> void
 {
-    if (cond) return;
+    if (cond) {
+        return;
+    }
     std::cerr << std::format(
         "{} in: {}({}:{}) `{}`: expect `{}`\n"
         "Stacktrace at this point:\n"

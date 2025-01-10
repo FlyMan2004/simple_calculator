@@ -3,9 +3,7 @@
 #ifndef PARSER_HXX
 #define PARSER_HXX
 
-#include <cstdint>
 #include <stack>
-#include <array>
 #include <span>
 #include <functional>
 #include <memory>
@@ -19,7 +17,7 @@ namespace simple_calc
 class Parser
 {
 protected:
-    enum class State
+    enum class State : std::uint8_t
     {
         statement,
         add_sub,
@@ -28,9 +26,9 @@ protected:
         mul_div_tail,
         operand,
     };
-    std::stack<State> m_state{};
-    std::span<Token const> m_input_tokens{};
-    std::shared_ptr<AST::ASTNode> m_ast_root{};
+    std::stack<State> m_state;
+    std::span<Token const> m_input_tokens;
+    std::shared_ptr<AST::ASTNode> m_ast_root;
 
 public:
     explicit Parser(

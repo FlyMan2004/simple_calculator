@@ -24,13 +24,13 @@ int main()
 {
     /* Any code here... */
     using namespace simple_calc;
-    let is_null_statement = 
+    let is_null_statement =
         [](std::vector<Token> const& statement) -> bool
         {
             let const& tokens = statement;
             return tokens.size() == 1 && tokens.front().kind == Token::Kind::end_of_statement;
         };
-    let is_invalid_statement = 
+    let is_invalid_statement =
         [](std::vector<Token> const& statement) -> bool
         {
             let const& tokens = statement;
@@ -40,13 +40,19 @@ int main()
     Lexer lexer;
     for (let statement = get_stmt(lexer); !is_null_statement(statement); statement = get_stmt(lexer)) {
         if (is_invalid_statement(statement)) {
-            std::cerr << "An error is omitted. Exit..." << std::endl;
+            std::cerr << "An error is omitted. Exit..." << '\n';
             return EXIT_FAILURE;
         }
         let parser = Parser({statement.cbegin(), statement.cend()});
         let const result = parser.get_ast()->evaluate();
         let const json = parser.get_ast()->to_string(JSON::Type::object);
-        std::clog << json << std::endl;
-        std::cout << std::format("{}\n", result);
+        std::clog << json << '\n';
+        std::visit(
+            [](auto const& value)
+            {
+                std::cout << std::format("{}\n", value);
+            },
+            result
+        );
     }
 }

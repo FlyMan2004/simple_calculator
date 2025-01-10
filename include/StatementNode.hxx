@@ -4,7 +4,9 @@
 #define STATEMENT_NODE_HXX
 
 #include "ASTNode.hxx"
+#include <memory>
 #include <typeindex>
+#include <utility>
 
 namespace simple_calc::AST
 {
@@ -16,21 +18,21 @@ protected:
     std::shared_ptr<ASTNode> m_expr;
 public:
     explicit StatementNode(std::shared_ptr<ASTNode> expr) noexcept
-        : m_expr(expr)
+        : m_expr(std::move(expr))
     {}
-    virtual ~StatementNode() = default;
+    ~StatementNode() override = default;
 
-    virtual auto evaluate() const -> EvalResult override
+    auto evaluate() const -> EvalResult override
     {
         return m_expr == nullptr ? std::numeric_limits<EvalResult>::min() : m_expr->evaluate();
     }
 
-    virtual auto get_available_json_type() const noexcept -> JSON::EnumBaseType override
+    auto get_available_json_type() const noexcept -> JSON::EnumBaseType override
     {
         return JSON::Type::object;
     }
 
-    virtual auto to_string(JSON::Type expect) const noexcept -> std::string override
+    auto to_string(JSON::Type expect) const noexcept -> std::string override
     {
         std::string result;
         switch (expect)

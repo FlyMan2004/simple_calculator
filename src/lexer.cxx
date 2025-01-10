@@ -1,6 +1,7 @@
 #include <utility>
 #include <sstream>
 #include "lexer.hxx"
+#include "literal.hxx"
 #include "token.hxx"
 
 namespace simple_calc {
@@ -26,8 +27,8 @@ Lexer::InputSource::~InputSource()
 
 fn Lexer::InputSource::file() const -> std::istream const&
 {
-    return this->is_from_stdin() ? 
-        std::as_const(this->m_stdin.get()) : 
+    return this->is_from_stdin() ?
+        std::as_const(this->m_stdin.get()) :
         this->m_file;
 }
 
@@ -56,7 +57,7 @@ fn Lexer::get_token() -> Token
     std::string tok_str = {};
 
     /*
-        Read token character by character.  
+        Read token character by character.
         Possible states for ${ch}:
             - null  ( ch == '\0' )
             - digit ( isdigit(ch) == true )
@@ -133,7 +134,9 @@ token_end:
     case literal:
         /* convert tok_str to integer and assign to tok.value */
         {
-            ASSERT(false);
+            std::int64_t value;
+            ss >> value;
+            std::construct_at(std::addressof(tok.value.literal), Literal::Kind::integer, value);
         }
         break;
     case op:

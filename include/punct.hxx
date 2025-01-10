@@ -12,7 +12,7 @@
 namespace simple_calc {
 
 struct Punct {
-    enum class Kind : std::uint32_t {
+    enum class Kind : std::uint8_t {
         invalid         = 0,
         exclamation     = '!',
         quotation       = '\"',
@@ -48,7 +48,7 @@ struct Punct {
         tilde           = '~',
     } value;
 
-    let static constexpr fmt_template = 
+    let static constexpr fmt_template =
         "{{" "\n"
         "   \"variable_name\": \"{}\"," "\n"
         "   \"variable_type\": \"{}\"," "\n"

@@ -14,18 +14,23 @@ namespace simple_calc::AST
 class ASTNode
 {
 public:
-    using EvalResult = std::variant<std::nullptr_t, bool, std::int64_t, long double, std::string>;
+  ASTNode() noexcept = default;
+  ASTNode(const ASTNode &) noexcept = default;
+  ASTNode(ASTNode &&) noexcept = default;
+  ASTNode &operator=(const ASTNode &) = default;
+  ASTNode &operator=(ASTNode &&) noexcept = default;
+  using EvalResult = std::variant<std::nullptr_t, bool, std::int64_t, long double, std::string>;
 
-    virtual ~ASTNode() = default;
+  virtual ~ASTNode() = default;
 
-    // Evaluate the ASTNode and return the result
-    virtual auto evaluate() const -> EvalResult = 0;
+  // Evaluate the ASTNode and return the result
+  virtual auto evaluate() const -> EvalResult = 0;
 
-    // Get JSON data type of the ASTNode
-    virtual auto get_available_json_type() const noexcept -> JSON::EnumBaseType = 0;
+  // Get JSON data type of the ASTNode
+  virtual auto get_available_json_type() const noexcept -> JSON::EnumBaseType = 0;
 
-    // Convert the Node to string
-    virtual auto to_string(JSON::Type expect) const noexcept -> std::string = 0;
+  // Convert the Node to string
+  virtual auto to_string(JSON::Type expect) const noexcept -> std::string = 0;
 };
 
 } // namespace simple_calc::AST
